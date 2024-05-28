@@ -1,0 +1,24 @@
+# train
+python -m torch.distributed.launch --nproc_per_node=2 script/pretrain.py -c config/transductive/pretrain_4g.yaml --gpus [0,1]
+
+# train from ckpt
+python -m torch.distributed.launch --nproc_per_node=2 script/pretrain.py -c config/transductive/pretrain_4g.yaml --gpus [0,1] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-01-14-10-20-44/model_epoch_9.pth
+
+# inference (No finetune)
+python script/run.py -c config/transductive/inference.yaml --dataset NvdOutOfSample --epochs 0 --bpe null --gpus [0] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-01-12-15-19-49/model_epoch_5.pth
+python script/run.py -c config/transductive/inference.yaml --dataset RedHatFinetune --epochs 0 --bpe null --gpus [0] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-01-27-08-27-51/model_epoch_9.pth
+
+# Distributed inference - relevant only for multi-gpu
+python -m torch.distributed.launch --nproc_per_node=2 script/run.py -c config/transductive/inference.yaml --dataset RedHatFinetune --epochs 0 --bpe null --gpus [0,1] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-01-27-08-27-51/model_epoch_9.pth
+python -m torch.distributed.launch --nproc_per_node=2 script/run.py -c config/transductive/inference.yaml --dataset NvdOutOfSample --epochs 0 --bpe null --gpus [0,1] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-01-22-17-38-00/model_epoch_8.pth
+
+# Finetune from ckpt
+python -m torch.distributed.launch --nproc_per_node=2 script/run.py -c config/transductive/inference.yaml --dataset RedHatFinetune --epochs 1 --bpe null --gpus [0,1] --ckpt /home/ULTRA/ckpts/ultra_4g.pth
+python -m torch.distributed.launch --nproc_per_node=2 script/run.py -c config/transductive/inference.yaml --dataset NvdOutOfSample --epochs 1 --bpe null --gpus [0,1] --ckpt /home/ULTRA/ckpts/ultra_4g.pth
+
+# Output CPE candidates of CVE (Distributed setup is not necessarly required)
+python -m torch.distributed.launch --nproc_per_node=2 script/run_cpe.py -c config/transductive/inference.yaml --dataset RedHatFinetune --epochs 0 --bpe null --gpus [0,1] --ckpt /home/ULTRA/output/Ultra/JointDataset/2024-02-20-17-05-55/model_epoch_4.pth
+
+# Plot loss - uses regex to capture the loss from a given log
+# within plot_loss.py just change the variable file to 
+python plot_loss.py 
